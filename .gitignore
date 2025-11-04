@@ -17,7 +17,7 @@ pids
 coverage/
 
 # Build output (if you ever use a build step)
-dist/
+# dist/ COMMENTED OUT for frontend code to work
 build/
 
 # dotenv environment variables

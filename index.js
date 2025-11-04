@@ -11,10 +11,6 @@ const app = express();
 //   origin: "http://localhost:5173",
 //   optionsSuccessStatus: 200,
 // };
-
-app.use(cors());
-app.use(express.json());
-
 const requestLogger = (request, response, next) => {
   const logEntry = [
     `Time:   ${new Date().toISOString()}`,
@@ -35,7 +31,10 @@ const requestLogger = (request, response, next) => {
   next();
 };
 
+app.use(cors());
+app.use(express.json());
 app.use(requestLogger);
+app.use(express.static("dist"));
 
 let notes = [
   {
