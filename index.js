@@ -1,16 +1,11 @@
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
-const cors = require("cors");
 
 const logFilePath = path.join(__dirname, "requests.log");
 
 const app = express();
 
-// const corsOptions = {
-//   origin: "http://localhost:5173",
-//   optionsSuccessStatus: 200,
-// };
 const requestLogger = (request, response, next) => {
   const logEntry = [
     `Time:   ${new Date().toISOString()}`,
@@ -31,7 +26,6 @@ const requestLogger = (request, response, next) => {
   next();
 };
 
-app.use(cors());
 app.use(express.json());
 app.use(requestLogger);
 app.use(express.static("dist"));
