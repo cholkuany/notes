@@ -1,6 +1,10 @@
+require("dotenv").config();
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
+const Note = require("./models/note");
+
+const PORT = process.env.PORT;
 
 const logFilePath = path.join(__dirname, "requests.log");
 
@@ -30,50 +34,36 @@ app.use(express.json());
 app.use(requestLogger);
 app.use(express.static("dist"));
 
-let notes = [
-  {
-    id: "1",
-    content: "HTML is easy",
-    important: true,
-  },
-  {
-    id: "2",
-    content: "Browser can execute only JavaScript",
-    important: false,
-  },
-  {
-    id: "3",
-    content: "GET and POST are the most important methods of HTTP protocol",
-    important: true,
-  },
-];
-
 app.get("/", (request, response) => {
   response.send("<h1> Hello World </h1>");
 });
 app.get("/api/notes", (request, response) => {
-  response.json(notes);
+  Note.find({}).then((notes) => {
+    response.json(notes);
+  });
 });
-app.get("/api/notes/:id", (request, response) => {
+app.get("/api/notes/:id", (request, response, next) => {
   const id = request.params.id;
-  const note = notes.find((note) => note.id === id);
-  if (note) {
-    response.json(note);
-  }
-  response.status(404).end();
+  Note.findById(id)
+    .then((note) => {
+      if (note) {
+        response.json(note);
+      } else {
+        response.sendStatus(404);
+      }
+    })
+    .catch((error) => next(error));
 });
 
-app.delete("/api/notes/:id", (req, res) => {
+app.delete("/api/notes/:id", (req, res, next) => {
   const id = req.params.id;
-  notes = notes.filter((n) => n.id !== id);
-  res.status(204).end();
+  Note.findByIdAndDelete({ _id: id })
+    .then((result) => {
+      console.log(`deleted: ${id}`);
+      res.status(204).end();
+    })
+    .catch((error) => next(error));
 });
-
-const generateId = () => {
-  const maxId =
-    notes.length > 0 ? Math.max(...notes.map((n) => Number(n.id))) : 0;
-  return String(maxId + 1);
-};
 
 app.post("/api/notes", (req, res) => {
   const body = req.body;
@@ -82,14 +72,32 @@ app.post("/api/notes", (req, res) => {
     return res.status(400).json({ error: "content missing" });
   }
 
-  const note = {
-    id: generateId(),
+  const note = new Note({
     content: body.content,
     important: body.important || false,
-  };
+  });
 
-  notes = notes.concat(note);
-  res.json(note);
+  note.save().then((savedNote) => {
+    res.json(savedNote);
+  });
+});
+app.put("/api/notes/:id", (request, response, next) => {
+  const { content, important } = request.body;
+
+  Note.findById(request.params.id)
+    .then((note) => {
+      if (!note) {
+        return response.status(404).end();
+      }
+
+      note.content = content;
+      note.important = important;
+
+      return note.save().then((updatedNote) => {
+        response.json(updatedNote);
+      });
+    })
+    .catch((error) => next(error));
 });
 
 const unknownEndpoint = (request, response) => {
@@ -98,7 +106,19 @@ const unknownEndpoint = (request, response) => {
 
 app.use(unknownEndpoint);
 
-const PORT = process.env.PORT || 3001;
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message);
+
+  if (error.name === "CastError") {
+    return response.status(400).send({ error: "malformatted id" });
+  }
+
+  next(error);
+};
+
+// this has to be the last loaded middleware, also all the routes should be registered before this!
+app.use(errorHandler);
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

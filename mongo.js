@@ -10,7 +10,6 @@ const password = process.argv[2];
 const url = `mongodb+srv://fullstackopen:${password}@myatlasclusteredu.xazg4rm.mongodb.net/noteApp?appName=myAtlasClusterEDU`;
 
 mongoose.set("strictQuery", false);
-
 mongoose.connect(url);
 
 const noteSchema = new mongoose.Schema({
