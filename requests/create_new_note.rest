@@ -1,7 +1,8 @@
 POST http://localhost:3001/api/notes HTTP/1.1
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImNrdWFueSIsImlkIjoiNjkxNGJhMjAzZTQ1Njc2NTI4Nzc0ZmRmIiwiaWF0IjoxNzYyOTgyMjg0fQ.C-R6d9t6EZSCfRbaWQtpvKD9qZWTYjvUFiFy0gGdrZQ
 
 {
-  "content": "toDB",
-  "important": true
+  "content": "Note with token based auth",
+  "important": false
 }
